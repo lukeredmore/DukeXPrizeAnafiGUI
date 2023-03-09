@@ -122,6 +122,18 @@ def turn_right():
             10,
         )
     )
+def start_turn_right(self):
+    global turning_right
+    print("Turning")
+    turning_right = True
+    # while(turning_right):
+    #     turn_right()
+    #     time.sleep(0.1)
+
+def stop_turn_right(self):
+    global turning_right
+    print("not turning")
+    turning_right = False
 
 def increase_throttle():
     drone(
@@ -330,7 +342,10 @@ l_rotate_button.place(relwidth=.2, relheight=.2105, relx=0, rely=0.35)
 r_rotate_button_image = Image.open("images/turn_right.png")
 r_rotate_photoImg = ImageTk.PhotoImage(r_rotate_button_image)
 r_rotate_button = Button(
-    controlFrame, image=r_rotate_photoImg, command=turn_right)
+    controlFrame, image=r_rotate_photoImg)
+r_rotate_button.pack(side=LEFT)
+r_rotate_button.bind('<ButtonPress-1>',start_turn_right)
+r_rotate_button.bind('<ButtonRelease-1>',stop_turn_right)
 r_rotate_button.place(relwidth=.2, relheight=.2105, relx=0.35, rely=0.35)
 
 # move forward button
@@ -406,7 +421,7 @@ look_down_button.place(relwidth=.207, relheight=.15, relx=0.785, rely=0.41)
 message_box = Listbox(controlFrame)
 message_box.place(relwidth= .5, relheight= .35, relx= 0, rely= .6)
 
-
+print("Always running")
 
 buttons = [ l_rotate_button, 
             r_rotate_button, 
@@ -455,4 +470,7 @@ if __name__ == "__main__":
     with olympe.Drone(DRONE_IP) as drone:
         disable_all_buttons()
         connect_button.config(state = "normal")
+        print("Always running2")
         root.mainloop()
+        print("Always running3")
+    print("Always running4")
