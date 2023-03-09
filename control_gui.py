@@ -122,18 +122,6 @@ def turn_right():
             10,
         )
     )
-def start_turn_right(self):
-    global turning_right
-    print("Turning")
-    turning_right = True
-    # while(turning_right):
-    #     turn_right()
-    #     time.sleep(0.1)
-
-def stop_turn_right(self):
-    global turning_right
-    print("not turning")
-    turning_right = False
 
 def increase_throttle():
     drone(
@@ -309,9 +297,8 @@ def look_down():
     
 def start_fpv():
     display_message('Starting first person view video feed...')
-    #p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/pdraw-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
-
-    #p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+    # first p1 is for sphinx, second is for real drone
+    # p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
     p1 = subprocess.Popen(['/home/drone/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://192.168.53.1/live'])
 
 def display_message(message):
@@ -335,24 +322,22 @@ controlFrame.place(relwidth=.95, relheight=.95, relx=0.025, rely=0.025)
 # rotate left
 l_rotate_button_image = Image.open("images/turn_left.png")
 l_rotate_photoImg = ImageTk.PhotoImage(l_rotate_button_image)
-l_rotate_button = Button(controlFrame, image=l_rotate_photoImg, command=turn_left)
+l_rotate_button = Button(controlFrame, image=l_rotate_photoImg, repeatdelay=100, repeatinterval=100, command=turn_left)
+l_rotate_button.pack()
 l_rotate_button.place(relwidth=.2, relheight=.2105, relx=0, rely=0.35)
 
 # rotate right
 r_rotate_button_image = Image.open("images/turn_right.png")
 r_rotate_photoImg = ImageTk.PhotoImage(r_rotate_button_image)
-r_rotate_button = Button(
-    controlFrame, image=r_rotate_photoImg)
-r_rotate_button.pack(side=LEFT)
-r_rotate_button.bind('<ButtonPress-1>',start_turn_right)
-r_rotate_button.bind('<ButtonRelease-1>',stop_turn_right)
+r_rotate_button = Button(controlFrame, image=r_rotate_photoImg, repeatdelay=100, repeatinterval=100, command=turn_right)
+r_rotate_button.pack()
 r_rotate_button.place(relwidth=.2, relheight=.2105, relx=0.35, rely=0.35)
 
 # move forward button
 forward_button_image = Image.open("images/move_forward.png")
 forward_button_photoImg = ImageTk.PhotoImage(forward_button_image)
 forward_button = Button(
-    controlFrame, image=forward_button_photoImg, command=move_forward)
+    controlFrame, image=forward_button_photoImg, repeatdelay=100, repeatinterval=100, command=move_forward)
 forward_button.place(relwidth=0.15, relheight=0.2, relx=0.20, rely=0.1)
 
 # connect button
@@ -470,7 +455,4 @@ if __name__ == "__main__":
     with olympe.Drone(DRONE_IP) as drone:
         disable_all_buttons()
         connect_button.config(state = "normal")
-        print("Always running2")
         root.mainloop()
-        print("Always running3")
-    print("Always running4")
