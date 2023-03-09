@@ -3,6 +3,7 @@
 # Environment setup commands:
 # olympe: source ~/code/parrot-groundsdk/./products/olympe/linux/env/shell
 import tkinter as tk
+import time
 from tkinter import *
 from PIL import Image
 from PIL import ImageTk
@@ -13,6 +14,7 @@ from olympe.messages.ardrone3.Piloting import TakeOff, Landing, PCMD
 from collections import defaultdict
 from olympe.messages.ardrone3.PilotingSettingsState import MaxTiltChanged
 import olympe.messages.gimbal as gimbal
+from olympe.messages.skyctrl.CoPiloting import setPilotingSource
 # from enum import Enum
 
 # Drone flight state variables
@@ -22,7 +24,8 @@ gimbal_attitude = 0
 p1 = subprocess;
 
 # Drone constants
-DRONE_IP = "192.168.42.1"
+DRONE_IP = "192.168.53.1" # to connect to the sky controller connected to the drone
+#DRONE_IP_DIRECT = "192.168.68.1" #(To connect to the drone direectly)
 SPHINX_IP = "10.202.0.1"
 
 # UI Global variables
@@ -36,6 +39,8 @@ ROTATE_BUTTON_HEIGHT = 400
 # Control variables
 control_quit = 0
 control_takeoff = 1
+
+#PCMD format: PCMD(1, roll, pitch, yaw, gaz, time)
 
 # Button helper functions
 # Roll drone to the left 
@@ -81,12 +86,12 @@ def pitch_fwd():
 def pitch_back():
     drone(
         PCMD(
-            1,
-            0,
-            -10,
-            0,
-            0,
-            10,
+            1,		#1
+            0,		#roll
+            -10,	#pitch
+            0,		#yaw
+            0,		#gaz
+            10,	#time i think
         )
     )
 
@@ -148,6 +153,7 @@ def connect():
     if not is_connected:
         display_message('Connecting to the drone...')
         drone.connect()
+        drone(setPilotingSource(source="Controller")).wait()
         display_message('Connected successfully.')
     is_connected = True
     connect_button.config(state = "disabled")
@@ -161,12 +167,13 @@ def takeoff():
     assert drone(TakeOff()).wait().success()
     display_message('Takeoff successful')
     # Set gimbal to attitude so that it looks straight
+    time.sleep(5)
     drone(
         gimbal.set_target(
             gimbal_id = 0,
             control_mode = "position",
             yaw_frame_of_reference = "absolute",
-            yaw = 0.0,
+            yaw = 180.0,
             pitch_frame_of_reference = "absolute",
             pitch = 0,
             roll_frame_of_reference = "absolute",
@@ -290,7 +297,10 @@ def look_down():
     
 def start_fpv():
     display_message('Starting first person view video feed...')
-    p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/pdraw-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+    #p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/pdraw-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+
+    #p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+    p1 = subprocess.Popen(['/home/drone/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://192.168.53.1/live'])
 
 def display_message(message):
     global message_box
@@ -442,7 +452,7 @@ def enable_movement_buttons():
 
 # Main Loop Start:
 if __name__ == "__main__":
-    with olympe.Drone(SPHINX_IP) as drone:
+    with olympe.Drone(DRONE_IP) as drone:
         disable_all_buttons()
         connect_button.config(state = "normal")
         root.mainloop()
