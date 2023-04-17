@@ -15,26 +15,38 @@ from collections import defaultdict
 from olympe.messages.ardrone3.PilotingSettingsState import MaxTiltChanged
 import olympe.messages.gimbal as gimbal
 from olympe.messages.skyctrl.CoPiloting import setPilotingSource
-# from enum import Enum
 
-# Drone flight state variables
-is_connected = False
-gimbal_attitude = 0
+# Runtime config variables
+import sys
+import getopt
+argv = sys.argv[1:]
+source = "CONTROLLER"
+try:
+    opts, args = getopt.getopt(argv, "s:")
+except:
+    print("Invalid Arguments. Supported arguments include -s simulator|drone|controller")
+    quit()
+for opt, arg in opts:
+    if opt in ['-s'] and (arg.upper() == "SIMULATOR" or arg.upper() == "DRONE" or arg.upper() == "CONTROLLER"):
+        source = arg.upper()
+print("Starting command GUI controlled by: " + source)
 
-p1 = subprocess;
-
-# Drone constants
-DRONE_IP = "192.168.53.1" # to connect to the sky controller connected to the drone
-#DRONE_IP_DIRECT = "192.168.68.1" #(To connect to the drone direectly)
+# Global constants
+CONTROLLER_IP = "192.168.53.1" # to connect to the sky controller connected to the drone
+DRONE_IP = "192.168.68.1" #(To connect to the drone direectly)
 SPHINX_IP = "10.202.0.1"
-
-# UI Global variables
 HEIGHT = 750
 WIDTH = 830
 BUTTON_WIDTH = 50
 BUTTON_HEIGHT = 50
 ROTATE_BUTTON_WIDTH = 70
 ROTATE_BUTTON_HEIGHT = 400
+
+# Drone flight state variables
+is_connected = False
+gimbal_attitude = 0
+IP = DRONE_IP if source == "DRONE" else SPHINX_IP if source == "SIMULATOR" else CONTROLLER_IP 
+p1 = subprocess;
 
 # Control variables
 control_quit = 0
@@ -297,9 +309,7 @@ def look_down():
     
 def start_fpv():
     display_message('Starting first person view video feed...')
-    # first p1 is for sphinx, second is for real drone
-    # p1 = subprocess.Popen(['/home/achilles/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
-    p1 = subprocess.Popen(['/home/drone/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://192.168.53.1/live'])
+    p1 = subprocess.Popen(['~/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u',f'rtsp://{IP}/live'])
 
 def display_message(message):
     global message_box
@@ -452,7 +462,7 @@ def enable_movement_buttons():
 
 # Main Loop Start:
 if __name__ == "__main__":
-    with olympe.Drone(DRONE_IP) as drone:
+    with olympe.Drone(IP) as drone:
         disable_all_buttons()
         connect_button.config(state = "normal")
         root.mainloop()
