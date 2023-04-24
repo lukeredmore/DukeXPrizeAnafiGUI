@@ -13,8 +13,10 @@ import time
 from olympe.messages.ardrone3.Piloting import TakeOff, Landing, PCMD
 from collections import defaultdict
 from olympe.messages.ardrone3.PilotingSettingsState import MaxTiltChanged
+from olympe.messages.ardrone3.PilotingState import PositionChanged
 import olympe.messages.gimbal as gimbal
 from olympe.messages.skyctrl.CoPiloting import setPilotingSource
+from telemetry_endpoint import send_telemetry
 
 # Runtime config variables
 import sys
@@ -162,12 +164,16 @@ def decrease_throttle():
 # Connect to drone
 def connect():
     global is_connected
+    if is_connected:
+        return
+    display_message('Connecting to the drone...')
+    is_connected = drone.connect()
+
     if not is_connected:
-        display_message('Connecting to the drone...')
-        drone.connect()
-        drone(setPilotingSource(source="Controller")).wait()
-        display_message('Connected successfully.')
-    is_connected = True
+        display_message("Connection failed. Is the controller connected to the computer?")
+        return
+    drone(setPilotingSource(source="Controller")).wait()
+    display_message('Connected successfully.')
     connect_button.config(state = "disabled")
     start_fpv_button.config(state = "normal")
     enable_gimbal_buttons()
@@ -306,10 +312,15 @@ def look_down():
 
     takeoff_button.config(state = "disabled")
     land_button.config(state = "normal")
+
+def acquire_and_send_telemetry():
+    display_message("GPS Pos: ", drone.get_state(PositionChanged))
+    display_message("Sending mock telemetry data to endpoint")
+    send_telemetry(lat_n=46.22322234, lng_e=23.33444434, alt_cm=444.343, grounded=False)
     
 def start_fpv():
-    display_message('Starting first person view video feed...')
-    p1 = subprocess.Popen(['~/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u',f'rtsp://{IP}/live'])
+    display_message(f'{IP}: Starting first person view video feed...')
+    p1 = subprocess.Popen(['~/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u',f'rtsp://{IP}/live'])
 
 def display_message(message):
     global message_box
@@ -413,10 +424,16 @@ look_down_button = Button(
     controlFrame, image=look_down_button_photoImg, command=look_down)
 look_down_button.place(relwidth=.207, relheight=.15, relx=0.785, rely=0.41)
 
+# message box
 message_box = Listbox(controlFrame)
-message_box.place(relwidth= .5, relheight= .35, relx= 0, rely= .6)
+message_box.place(relwidth= .5, relheight= .3, relx= 0, rely= .6)
 
-print("Always running")
+# send telemetry button
+send_telemetry_button_image = Image.open("images/send_telem.png")
+send_telemetry_button_photoImg = ImageTk.PhotoImage(send_telemetry_button_image)
+send_telemetry_button = Button(
+    controlFrame, image = send_telemetry_button_photoImg, command=acquire_and_send_telemetry)
+send_telemetry_button.place(relwidth=0.5, relheight=0.07, relx=0, rely=0.92)
 
 buttons = [ l_rotate_button, 
             r_rotate_button, 
@@ -427,6 +444,7 @@ buttons = [ l_rotate_button,
             gimbal_down_button,
             look_up_button,
             look_forward_button,
+            #send_telemetry_button,
             look_down_button,
             connect_button,
             start_fpv_button ]
@@ -442,6 +460,7 @@ def enable_all_buttons():
         button.config(state = "normal")
 
 def disable_gimbal_buttons():
+    send_telemetry_button.config(state="disabled")
     look_up_button.config(state = "disabled")
     look_down_button.config(state = "disabled")
     look_forward_button.config(state = "disabled")
@@ -449,6 +468,7 @@ def disable_gimbal_buttons():
     gimbal_down_button.config(state = "disabled")
 
 def enable_gimbal_buttons():
+    send_telemetry_button.config(state="normal")
     look_up_button.config(state = "normal")
     look_down_button.config(state = "normal")
     look_forward_button.config(state = "normal")
