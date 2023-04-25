@@ -16,7 +16,7 @@ from olympe.messages.ardrone3.PilotingSettingsState import MaxTiltChanged
 from olympe.messages.ardrone3.PilotingState import PositionChanged
 import olympe.messages.gimbal as gimbal
 from olympe.messages.skyctrl.CoPiloting import setPilotingSource
-from telemetry_endpoint import send_telemetry
+from telemetry_endpoint import send_telemetry, send_telemetry_init
 
 # Runtime config variables
 import sys
@@ -314,13 +314,18 @@ def look_down():
     land_button.config(state = "normal")
 
 def acquire_and_send_telemetry():
-    display_message("GPS Pos: ", drone.get_state(PositionChanged))
-    display_message("Sending mock telemetry data to endpoint")
-    send_telemetry(lat_n=46.22322234, lng_e=23.33444434, alt_cm=444.343, grounded=False)
+    pos = drone.get_state(PositionChanged)
+    print("Drone coordinates: ")
+    print(pos)
+    display_message(f"Sending telemetry: Lat: {pos['latitude']}, Lng: {pos['longitude']}, Alt: {pos['altitude']} (m)")
+    send_telemetry(lat_n=pos['latitude'], lng_e=pos['longitude'], alt_cm=pos['altitude']*100, grounded=False)
     
 def start_fpv():
     display_message(f'{IP}: Starting first person view video feed...')
     p1 = subprocess.Popen(['~/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u',f'rtsp://{IP}/live'])
+    #p1 = subprocess.Popen(['~/code/parrot-groundsdk/out/pdraw-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+    #p1 = subprocess.Popen(['~/code/parrot-groundsdk/out/olympe-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://10.202.0.1/live'])
+    #p1 = subprocess.Popen(['~/Desktop/groundsdk-tools/out/groundsdk-linux/staging/native-wrapper.sh', 'pdraw', '-u','rtsp://192.168.53.1/live'])
 
 def display_message(message):
     global message_box

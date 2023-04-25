@@ -37,6 +37,19 @@ def send_telemetry(lat_n, lng_e, alt_cm, grounded=True, v_acc=-1, h_acc=-1):
     print(payload)
     ws.send(payload)
 
+def send_telemetry_init():
+    date_string = datetime.utcnow().isoformat("T") + "Z"
+    payload = """{
+        "t": "%s",
+        "lat": "",
+        "lng": "",
+        "alt": 0,
+        "status": 1,
+        "v_acc": -1,
+        "h_acc": -1
+    }""" % date_string
+    print(payload)
+    ws.send(payload)
 
 websocket.enableTrace(True)
 ws = websocket.WebSocketApp(WS_URL,
@@ -48,3 +61,10 @@ ws = websocket.WebSocketApp(WS_URL,
 ws.run_forever(dispatcher=rel, reconnect=5)  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
 rel.signal(2, rel.abort)  # Keyboard Interrupt
 rel.dispatch()
+
+
+# wscat -c "wss://xprize.mydronefleets.com/live/tracker/netrid/?drone_id=1b058a6e5d66031f11f71684b302f51d&access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNpZy1ycy0wIn0.eyJwbGV4Ijp7ImNvbXBhbnlfaWQiOiIxYjA1OGE2ZTVkNjYwMzFmMTFmNzE2ODRiMzAxYTU1YiIsImNsaWVudF9pZCI6IjFiMDU4YTZlNWQ2NjAzMWYxMWY3MTY4NGIzMDFhNTViIn0sImp0aSI6IlVTcHJ3akdzelpqQXdGdnpOWWEyWiIsImlhdCI6MTY4MDY4OTI5MiwiZXhwIjoxNjg4NDY1MjkyLCJpc3MiOiJodHRwczovL2lkZW50aXR5LmdhcnVkYS5pbyIsImF1ZCI6IjFiMDU4YTZlNWQ2NjAzMWYxMWY3MTY4NGIzMDFhNTViIn0.LmgpjNFmojJMMaHu_JT42owVPY9cGBhx8wbxwq88cK_sHUapiYYGJNu5kyJNRWwFOQOi30MlJ7mbeWH1PKLu3_H5SvUpKQtyn8GB7jUabqnLaHLa5Sl76KBhRyP_Zy5YDSu8AqD8HAVh4ON8si-goGmZQXVXmejN12islJvGMdc4DqhKGmQ90T0sVpum51IQAqchKFEtLfhZgQuGsdfQWbyhLTEVQk_DY4pMeRQGfNqA20-IBxbETwccT42zYXYG4XDnUY-UtaFA3BJ9AquXJphc97kTpdPV4uPhosXeoncVTJgWd9CZzg5uPNfPM2yQKoYdb4ZxTZN0qHnSMTMHeA"
+
+# { "t": "2023-04-24T03:12:37.604409Z", "lat": "", "lng": "", "alt": 0, "status": 1, "v_acc": -1, "h_acc": -1 }
+
+
